@@ -151,4 +151,38 @@ public readonly partial record struct ErrorOr<TValue> : IErrorOr<TValue>
 
         return await onError.ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// If the state is error, the provided <paramref name="action"/> is invoked.
+    /// </summary>
+    /// <param name="action">The action to execute if the state is error.</param>
+    /// <returns>The original <see cref="ErrorOr"/> instance.</returns>
+    public ErrorOr<TValue> ElseDo(Action<List<Error>> action)
+    {
+        if (!IsError)
+        {
+            return this;
+        }
+
+        action(Errors);
+
+        return this;
+    }
+
+    /// <summary>
+    /// If the state is error, the provided <paramref name="action"/> is invoked asynchronously.
+    /// </summary>
+    /// <param name="action">The action to execute if the state is error.</param>
+    /// <returns>The original <see cref="ErrorOr"/> instance.</returns>
+    public async Task<ErrorOr<TValue>> ElseDoAsync(Func<List<Error>, Task> action)
+    {
+        if (!IsError)
+        {
+            return this;
+        }
+
+        await action(Errors).ConfigureAwait(false);
+
+        return this;
+    }
 }

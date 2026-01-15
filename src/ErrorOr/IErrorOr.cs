@@ -25,4 +25,10 @@ public interface IErrorOr
     /// Gets a value indicating whether the state is error.
     /// </summary>
     bool IsError { get; }
+
+    /// <summary>
+    /// Gets the value as an object. Useful for logging and serialization when the type is unknown.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when no value is present.</exception>
+    object ValueObject { get; }
 }
