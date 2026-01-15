@@ -36,13 +36,33 @@ jobs:
       - name: Package
         run: dotnet pack -c Release --no-build src/ErrorOr.csproj
 
-      - name: NuGet login (OIDC Trusted Publishing)
-        uses: nuget/login@v1
-        with:
-          user: tmiller1995
+      # Debug: Check if API key is available
+      - name: Debug API Key
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::NUGET_API_KEY secret is empty or not set!"
+            exit 1
+          else
+            echo "✓ NUGET_API_KEY is set (length: ${#NUGET_API_KEY} characters)"
+          fi
 
+      # List packages to publish
+      - name: List packages
+        run: |
+          echo "Packages to publish:"
+          ls -la ./artifacts/
+
+      # Publish using API Key
       - name: Publish NuGet Package
-        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Publish Symbol Package
-        run: dotnet nuget push ./artifacts/*.snupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./artifacts/*.snupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
