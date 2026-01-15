@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace ErrorOr;
 
@@ -8,6 +9,7 @@ namespace ErrorOr;
 /// </summary>
 /// <typeparam name="TValue">The type of the underlying <see cref="Value"/>.</typeparam>
 [DebuggerDisplay("{IsError ? \"Error: \" + _errors[0].Code : \"Value: \" + _value}")]
+[CollectionBuilder(typeof(ErrorOrBuilder), nameof(ErrorOrBuilder.Create))]
 public readonly partial record struct ErrorOr<TValue> : IErrorOr<TValue>
 {
     private readonly TValue? _value = default;
@@ -34,7 +36,7 @@ public readonly partial record struct ErrorOr<TValue> : IErrorOr<TValue>
             throw new ArgumentNullException(nameof(errors));
         }
 
-        if (errors is null || errors.Count == 0)
+        if (errors.Count == 0)
         {
             throw new ArgumentException("Cannot create an ErrorOr<TValue> from an empty collection of errors. Provide at least one error.", nameof(errors));
         }
@@ -103,6 +105,23 @@ public readonly partial record struct ErrorOr<TValue> : IErrorOr<TValue>
             }
 
             return _errors[0];
+        }
+    }
+
+    /// <summary>
+    /// Gets the value as an object. Useful for logging and serialization when the type is unknown.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when no value is present.</exception>
+    object IErrorOr.ValueObject
+    {
+        get
+        {
+            if (IsError)
+            {
+                throw new InvalidOperationException("The ValueObject property cannot be accessed when errors have been recorded. Check IsError before accessing ValueObject.");
+            }
+
+            return _value!;
         }
     }
 

@@ -2,6 +2,83 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.1.0] - 2026-01-15
+
+### Added
+
+- **ElseDo/ElseDoAsync Methods**: Execute side effects on error state without transforming the result
+  - `ElseDo(Action<List<Error>>)` - execute action when in error state, return original ErrorOr
+  - `ElseDoAsync(Func<List<Error>, Task>)` - async variant
+  - Extensions for `Task<ErrorOr<T>>` included
+  - Based on [amantinband/error-or#117](https://github.com/amantinband/error-or/pull/117), addresses [#139](https://github.com/amantinband/error-or/issues/139)
+
+```csharp
+errorOr
+    .ThenDo(val => Console.WriteLine("Success!"))
+    .ElseDo(errors => Console.WriteLine($"Failed with {errors.Count} errors"));
+```
+
+- **ToErrorOrAsync Extension**: Convert async results directly to `Task<ErrorOr<T>>`
+  - Based on [amantinband/error-or#122](https://github.com/amantinband/error-or/pull/122)
+
+```csharp
+return await repository.GetByIdAsync(id)
+    .ToErrorOrAsync()
+    .FailIf(x => x is null, Errors.NotFound);
+```
+
+- **Error Aggregation Methods**: Combine multiple ErrorOr instances or append errors
+  - `Combine<T>(params ErrorOr<T>[])` - returns first value or all errors combined
+  - `CombineAll<T>(params ErrorOr<T>[])` - returns all values as list or all errors combined
+  - `AppendErrors(params Error[])` - append additional errors to an ErrorOr
+  - Based on [amantinband/error-or#125](https://github.com/amantinband/error-or/pull/125), addresses [#120](https://github.com/amantinband/error-or/issues/120)
+
+```csharp
+var combined = ErrorOrExtensions.Combine(result1, result2, result3);
+var withMoreErrors = result.AppendErrors(Error.Validation("Additional error"));
+```
+
+- **ValueObject Property on IErrorOr Interface**: Access value without knowing generic type
+  - Enables logging/serialization scenarios where type is unknown
+  - Based on [amantinband/error-or#136](https://github.com/amantinband/error-or/pull/136), addresses [#121](https://github.com/amantinband/error-or/issues/121)
+
+```csharp
+IErrorOr result = GetSomeResult();
+if (!result.IsError)
+    logger.Log(result.ValueObject);
+```
+
+- **Collection Expression Support**: Use C# 12 collection expressions to create ErrorOr from errors
+  - Based on [amantinband/error-or#133](https://github.com/amantinband/error-or/pull/133)
+
+```csharp
+ErrorOr<int> result = [Error.Validation(), Error.NotFound()];
+```
+
+- **Additional Factory Methods**: Create ErrorOr from single error or error collections
+  - `ErrorOrFactory.From<T>(Error)` - from single error
+  - `ErrorOrFactory.From<T>(List<Error>)` - from error list
+  - `ErrorOrFactory.From<T>(Error[])` - from error array
+  - `ErrorOrFactory.FromAsync<T>(...)` - async variants
+  - Based on [amantinband/error-or#129](https://github.com/amantinband/error-or/pull/129), [#134](https://github.com/amantinband/error-or/pull/134)
+
+```csharp
+ErrorOr<int> result = ErrorOrFactory.From<int>(Error.Unexpected());
+ErrorOr<int> multiple = ErrorOrFactory.From<int>([error1, error2]);
+```
+
+### Changed
+
+- **Null Check Optimization**: Removed redundant null check in error collection constructor
+  - Based on [amantinband/error-or#128](https://github.com/amantinband/error-or/pull/128), [#135](https://github.com/amantinband/error-or/pull/135)
+
+### Fixed
+
+- **README Documentation**: Fixed custom error type example to use correct accessor visibility
+  - Based on [amantinband/error-or#118](https://github.com/amantinband/error-or/pull/118)
+
+---
+
 ## [3.0.0] - 2026-01-12
 
 ### Breaking Changes

@@ -44,12 +44,14 @@
   - [Using implicit conversion](#using-implicit-conversion)
   - [Using The `ErrorOrFactory`](#using-the-errororfactory)
   - [Using The `ToErrorOr` Extension Method](#using-the-toerroror-extension-method)
+  - [Using The `ToErrorOrAsync` Extension Method](#using-the-toerrororasync-extension-method)
 - [Properties](#properties)
   - [`IsError`](#iserror)
   - [`Value`](#value)
   - [`Errors`](#errors)
   - [`FirstError`](#firsterror)
   - [`ErrorsOrEmptyList`](#errorsoremptylist)
+  - [`ValueObject`](#valueobject)
 - [Methods](#methods)
   - [`Match`](#match)
     - [`Match`](#match-1)
@@ -70,7 +72,11 @@
   - [`Else`](#else)
     - [`Else`](#else-1)
     - [`ElseAsync`](#elseasync)
+    - [`ElseDo` and `ElseDoAsync`](#elsedo-and-elsedoasync)
 - [Mixing Features (`Then`, `FailIf`, `Else`, `Switch`, `Match`)](#mixing-features-then-failif-else-switch-match)
+- [Error Aggregation](#error-aggregation)
+  - [`Combine` and `CombineAll`](#combine-and-combineall)
+  - [`AppendErrors`](#appenderrors)
 - [Error Types](#error-types)
   - [Built in error types](#built-in-error-types)
   - [Custom error types](#custom-error-types)
@@ -317,6 +323,26 @@ ErrorOr<int> result = Error.Unexpected().ToErrorOr<int>();
 ErrorOr<int> result = new[] { Error.Validation(), Error.Validation() }.ToErrorOr<int>();
 ```
 
+## Using The `ToErrorOrAsync` Extension Method
+
+`ToErrorOrAsync` converts an asynchronous operation directly to `Task<ErrorOr<T>>`, enabling fluent chaining with async database calls, API requests, and other async operations.
+
+```cs
+// Convert async result to ErrorOr and chain operations
+ErrorOr<User> result = await userRepository.GetByIdAsync(id)
+    .ToErrorOrAsync()
+    .FailIf(user => user is null, UserErrors.NotFound)
+    .Then(user => user!);
+```
+
+```cs
+// Chain multiple async operations fluently
+ErrorOr<OrderResult> result = await orderService.GetOrderAsync(orderId)
+    .ToErrorOrAsync()
+    .FailIf(order => order.Status == "Cancelled", OrderErrors.AlreadyCancelled)
+    .ThenAsync(order => paymentService.ProcessAsync(order));
+```
+
 # Properties
 
 ## `IsError`
@@ -377,6 +403,34 @@ if (result.IsError)
 }
 
 result.ErrorsOrEmptyList // List<Error> { }
+```
+
+## `ValueObject`
+
+The `ValueObject` property is available on the `IErrorOr` interface and provides access to the underlying value as an `object`. This is useful for logging, serialization, or other scenarios where you need to access the value without knowing the generic type at compile time.
+
+```cs
+IErrorOr result = GetSomeResult();
+
+if (!result.IsError)
+{
+    logger.Log(result.ValueObject); // Access value without knowing the generic type
+}
+```
+
+```cs
+// Useful in generic logging or serialization scenarios
+void LogResult(IErrorOr result)
+{
+    if (result.IsError)
+    {
+        logger.LogError("Operation failed with {ErrorCount} errors", result.Errors!.Count);
+    }
+    else
+    {
+        logger.LogInformation("Operation succeeded with value: {Value}", result.ValueObject);
+    }
+}
 ```
 
 # Methods
@@ -582,6 +636,32 @@ ErrorOr<string> foo = await result
     .ElseAsync(errors => Task.FromResult($"{errors.Count} errors occurred."));
 ```
 
+### `ElseDo` and `ElseDoAsync`
+
+`ElseDo` and `ElseDoAsync` are similar to `Else` and `ElseAsync`, but instead of transforming the error to a value, they execute a side effect and return the original `ErrorOr`. This is useful for logging, metrics, or other side effects when an error occurs.
+
+```cs
+ErrorOr<int> result = GetResult()
+    .ThenDo(val => Console.WriteLine($"Success: {val}"))
+    .ElseDo(errors => Console.WriteLine($"Failed with {errors.Count} errors"));
+```
+
+```cs
+// Log errors without recovering
+ErrorOr<User> user = await GetUserAsync()
+    .ElseDo(errors => _logger.LogWarning("Failed to get user: {Errors}", errors))
+    .ElseDoAsync(errors => _metrics.RecordFailureAsync("GetUser", errors.Count));
+```
+
+```cs
+// Chain with other methods
+ErrorOr<int> result = await GetValueAsync()
+    .ThenDo(val => Console.WriteLine($"Got value: {val}"))
+    .ElseDo(errors => Console.WriteLine($"Error occurred"))
+    .Then(val => val * 2)
+    .ElseDoAsync(errors => LogErrorsAsync(errors));
+```
+
 # Mixing Features (`Then`, `FailIf`, `Else`, `Switch`, `Match`)
 
 You can mix `Then`, `FailIf`, `Else`, `Switch` and `Match` methods together.
@@ -597,6 +677,74 @@ ErrorOr<string> foo = await result
     .MatchFirst(
         value => value,
         firstError => $"An error occurred: {firstError.Description}");
+```
+
+# Error Aggregation
+
+When working with multiple `ErrorOr` instances, you may need to combine them or aggregate errors from multiple operations.
+
+## `Combine` and `CombineAll`
+
+`Combine` takes multiple `ErrorOr<T>` instances and returns either the first success value or all errors combined.
+
+```cs
+ErrorOr<int> result1 = 1;
+ErrorOr<int> result2 = Error.Validation("Error 1");
+ErrorOr<int> result3 = Error.Validation("Error 2");
+
+// Returns first success value, or all errors if all fail
+ErrorOr<int> combined = ErrorOrExtensions.Combine(result1, result2, result3);
+// combined.Value == 1
+```
+
+```cs
+ErrorOr<int> result1 = Error.Validation("Error 1");
+ErrorOr<int> result2 = Error.Validation("Error 2");
+
+ErrorOr<int> combined = ErrorOrExtensions.Combine(result1, result2);
+// combined.Errors contains both errors
+```
+
+`CombineAll` returns all values as a list if all succeed, or all errors if any fail.
+
+```cs
+ErrorOr<int> result1 = 1;
+ErrorOr<int> result2 = 2;
+ErrorOr<int> result3 = 3;
+
+ErrorOr<List<int>> combined = ErrorOrExtensions.CombineAll(result1, result2, result3);
+// combined.Value == [1, 2, 3]
+```
+
+```cs
+ErrorOr<int> result1 = 1;
+ErrorOr<int> result2 = Error.Validation("Error 1");
+ErrorOr<int> result3 = Error.Validation("Error 2");
+
+ErrorOr<List<int>> combined = ErrorOrExtensions.CombineAll(result1, result2, result3);
+// combined.Errors contains both errors (not result1's value)
+```
+
+## `AppendErrors`
+
+`AppendErrors` adds additional errors to an existing `ErrorOr` instance.
+
+```cs
+ErrorOr<int> result = Error.Validation("First error");
+
+ErrorOr<int> withMoreErrors = result.AppendErrors(
+    Error.Validation("Second error"),
+    Error.Validation("Third error"));
+// withMoreErrors.Errors contains all three errors
+```
+
+```cs
+// If the result is a success, AppendErrors converts it to an error state
+ErrorOr<int> result = 42;
+
+ErrorOr<int> withErrors = result.AppendErrors(Error.Validation("Oops"));
+// withErrors.IsError == true
+// withErrors.Errors contains the validation error
 ```
 
 # Error Types
@@ -648,7 +796,7 @@ A custom error type can be created with the `Custom` static method
 ```cs
 public static class MyErrorTypes
 {
-    const int ShouldNeverHappen = 12;
+    public const int ShouldNeverHappen = 12;
 }
 
 var error = Error.Custom(
