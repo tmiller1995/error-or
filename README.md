@@ -2,19 +2,34 @@
 
 <img src="assets/icon.png" alt="drawing" width="700px"/></br>
 
-[![NuGet](https://img.shields.io/nuget/v/erroror.svg)](https://www.nuget.org/packages/erroror)
+[![NuGet](https://img.shields.io/nuget/v/TylerSoftware.ErrorOr.svg)](https://www.nuget.org/packages/TylerSoftware.ErrorOr)
 
-[![Build](https://github.com/amantinband/error-or/actions/workflows/build.yml/badge.svg)](https://github.com/amantinband/error-or/actions/workflows/build.yml) [![publish ErrorOr to nuget](https://github.com/amantinband/error-or/actions/workflows/publish.yml/badge.svg)](https://github.com/amantinband/error-or/actions/workflows/publish.yml)
+[![Build](https://github.com/tmiller1995/error-or/actions/workflows/build.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/build.yml) [![Publish](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml)
 
-[![GitHub contributors](https://img.shields.io/github/contributors/amantinband/error-or)](https://GitHub.com/amantinband/error-or/graphs/contributors/) [![GitHub Stars](https://img.shields.io/github/stars/amantinband/error-or.svg)](https://github.com/amantinband/error-or/stargazers) [![GitHub license](https://img.shields.io/github/license/amantinband/error-or)](https://github.com/amantinband/error-or/blob/main/LICENSE)
-[![codecov](https://codecov.io/gh/amantinband/error-or/branch/main/graph/badge.svg?token=DR2EBIWK7B)](https://codecov.io/gh/amantinband/error-or)
+[![GitHub Stars](https://img.shields.io/github/stars/tmiller1995/error-or.svg)](https://github.com/tmiller1995/error-or/stargazers) [![GitHub license](https://img.shields.io/github/license/tmiller1995/error-or)](https://github.com/tmiller1995/error-or/blob/main/LICENSE)
+
 ---
 
 ### A simple, fluent discriminated union of an error or a result.
 
-`dotnet add package ErrorOr`
+`dotnet add package TylerSoftware.ErrorOr`
 
 </div>
+
+## Compatibility
+
+| Target Framework  | Supported |
+|-------------------|-----------|
+| .NET Standard 2.0 | Yes       |
+| .NET 8.0          | Yes       |
+| .NET 9.0          | Yes       |
+| .NET 10.0         | Yes       |
+
+**Features:**
+- Full AOT (Ahead-of-Time) compilation support
+- Trimming compatible
+- Source Link enabled for debugging
+- Symbol packages available
 
 - [Give it a star ⭐!](#give-it-a-star-)
 - [Getting Started 🏃](#getting-started-)
@@ -763,4 +778,10 @@ If you have any questions, comments, or suggestions, please open an issue or cre
 
 # License 🪪
 
-This project is licensed under the terms of the [MIT](https://github.com/mantinband/error-or/blob/main/LICENSE) license.
+This project is licensed under the terms of the [MIT](https://github.com/tmiller1995/error-or/blob/main/LICENSE) license.
+
+---
+
+## Migration from ErrorOr
+
+If you're migrating from the original `ErrorOr` package, see [MIGRATION.md](MIGRATION.md) for details.

@@ -1,24 +1,48 @@
-name: publish ErrorOr to nuget
-on:
-    workflow_dispatch:
-    push:
-        branches:
-            - main # Default release branch
-        paths:
-            - "src/**"
-jobs:
-    publish:
-        name: build, pack & publish
-        runs-on: windows-latest
-        steps:
-            - uses: actions/checkout@v2
-            - name: Setup dotnet
-              uses: actions/setup-dotnet@v1
-              with:
-                  dotnet-version: 8.0.100
+name: Publish TylerSoftware.ErrorOr to NuGet
 
-            # Publish
-            - name: Package
-              run: dotnet pack -c Release src/ErrorOr.csproj
-            - name: Publish
-              run: dotnet nuget push .\artifacts\*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Build, Pack & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC token issuance (Trusted Publishing)
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for Source Link
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-build --verbosity normal
+
+      - name: Package
+        run: dotnet pack -c Release --no-build src/ErrorOr.csproj
+
+      - name: NuGet login (OIDC Trusted Publishing)
+        uses: nuget/login@v1
+        with:
+          user: tmiller1995
+
+      - name: Publish NuGet Package
+        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish Symbol Package
+        run: dotnet nuget push ./artifacts/*.snupkg --source https://api.nuget.org/v3/index.json --skip-duplicate

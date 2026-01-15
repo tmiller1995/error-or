@@ -1,8 +1,11 @@
+using System.Diagnostics;
+
 namespace ErrorOr;
 
 /// <summary>
 /// Represents an error.
 /// </summary>
+[DebuggerDisplay("{Code}: {Description} ({Type})")]
 public readonly record struct Error
 {
     private Error(string code, string description, ErrorType type, Dictionary<string, object>? metadata)

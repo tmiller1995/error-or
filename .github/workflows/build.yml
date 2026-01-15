@@ -1,31 +1,40 @@
 name: Build
 
 on:
-    workflow_dispatch:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-    build:
-        runs-on: windows-latest
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x', '9.0.x', '10.0.x']
 
-        steps:
-            - uses: actions/checkout@v2
-            - name: Setup .NET
-              uses: actions/setup-dotnet@v1
-              with:
-                  dotnet-version: 8.0.x
-            - name: Restore dependencies
-              run: dotnet restore
-            - name: Build
-              run: dotnet build -c Release --no-restore
-            - name: Test Debug
-              run: dotnet test -c Debug --no-restore --verbosity normal --collect:"XPlat Code Coverage"
-            - name: Test Release
-              run: dotnet test -c Release --no-restore --verbosity normal --collect:"XPlat Code Coverage"
-            - name: Upload coverage to Codecov
-              uses: codecov/codecov-action@v1
-              with:
-                  token: ${{ secrets.CODE_COV_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for Source Link
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-restore --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage to Codecov
+        if: matrix.dotnet-version == '10.0.x'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODE_COV_TOKEN }}

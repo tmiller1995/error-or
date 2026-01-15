@@ -1,0 +1,58 @@
+name: AOT Compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  aot-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore tests/AotCompatibility/AotCompatibility.csproj
+
+      - name: Build AOT
+        run: dotnet build tests/AotCompatibility/AotCompatibility.csproj -c Release
+
+      - name: Publish Native AOT
+        run: dotnet publish tests/AotCompatibility/AotCompatibility.csproj -c Release -r ${{ matrix.rid }} --self-contained -o ./aot-publish
+
+      - name: Run AOT Binary (Unix)
+        if: runner.os != 'Windows'
+        run: ./aot-publish/AotCompatibility
+
+      - name: Run AOT Binary (Windows)
+        if: runner.os == 'Windows'
+        run: ./aot-publish/AotCompatibility.exe
+
+      - name: Report Binary Size
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            ls -lh ./aot-publish/AotCompatibility.exe
+          else
+            ls -lh ./aot-publish/AotCompatibility
+          fi

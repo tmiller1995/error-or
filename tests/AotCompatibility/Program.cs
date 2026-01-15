@@ -1,0 +1,77 @@
+// AOT Compatibility Test Application
+// This application exercises the ErrorOr library APIs to verify AOT compilation compatibility.
+// It's designed to be published with Native AOT and will fail to compile if any AOT-incompatible
+// code patterns are detected.
+
+using ErrorOr;
+
+Console.WriteLine("ErrorOr AOT Compatibility Test");
+Console.WriteLine("==============================");
+
+// Test 1: Create ErrorOr with value
+ErrorOr<int> valueResult = 42;
+Console.WriteLine($"Test 1 - Value creation: IsError={valueResult.IsError}, Value={valueResult.Value}");
+
+// Test 2: Create ErrorOr with error
+ErrorOr<int> errorResult = Error.Validation("Test.Error", "A test error");
+Console.WriteLine($"Test 2 - Error creation: IsError={errorResult.IsError}, Code={errorResult.FirstError.Code}");
+
+// Test 3: Create different error types
+var errors = new[]
+{
+    Error.Failure(),
+    Error.Unexpected(),
+    Error.Validation(),
+    Error.Conflict(),
+    Error.NotFound(),
+    Error.Unauthorized(),
+    Error.Forbidden(),
+    Error.Custom(100, "Custom.Error", "Custom error type"),
+};
+
+Console.WriteLine($"Test 3 - Error types: Created {errors.Length} different error types");
+
+// Test 4: Match pattern
+var matchResult = valueResult.Match(
+    onValue: value => $"Got value: {value}",
+    onError: errors => $"Got {errors.Count} errors");
+Console.WriteLine($"Test 4 - Match: {matchResult}");
+
+// Test 5: Then chaining
+ErrorOr<string> chainResult = valueResult.Then(value => value * 2).Then(value => $"Doubled: {value}");
+Console.WriteLine($"Test 5 - Then chain: {chainResult.Value}");
+
+// Test 6: Else for error handling
+ErrorOr<int> elseResult = errorResult.Else(42);
+Console.WriteLine($"Test 6 - Else: {elseResult.Value}");
+
+// Test 7: Multiple errors
+ErrorOr<string> multiErrorResult = new List<Error>
+{
+    Error.Validation("Error1", "First error"),
+    Error.Validation("Error2", "Second error"),
+};
+Console.WriteLine($"Test 7 - Multiple errors: {multiErrorResult.Errors.Count} errors");
+
+// Test 8: ErrorsOrEmptyList
+var safeErrors = valueResult.ErrorsOrEmptyList;
+Console.WriteLine($"Test 8 - ErrorsOrEmptyList: {safeErrors.Count} errors (safe access)");
+
+// Test 9: Result types (Success, Created, Updated, Deleted)
+ErrorOr<Success> successResult = Result.Success;
+ErrorOr<Created> createdResult = Result.Created;
+ErrorOr<Updated> updatedResult = Result.Updated;
+ErrorOr<Deleted> deletedResult = Result.Deleted;
+Console.WriteLine($"Test 9 - Result types: Success={!successResult.IsError}, Created={!createdResult.IsError}");
+
+// Test 10: Error with metadata
+var metadataError = Error.Validation(
+    "Meta.Error",
+    "Error with metadata",
+    new Dictionary<string, object> { ["key"] = "value" });
+Console.WriteLine($"Test 10 - Metadata: {metadataError.Metadata?.Count ?? 0} entries");
+
+Console.WriteLine("==============================");
+Console.WriteLine("All AOT compatibility tests passed!");
+
+return 0;

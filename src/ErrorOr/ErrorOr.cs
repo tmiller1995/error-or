@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ErrorOr;
@@ -6,6 +7,7 @@ namespace ErrorOr;
 /// A discriminated union of errors or a value.
 /// </summary>
 /// <typeparam name="TValue">The type of the underlying <see cref="Value"/>.</typeparam>
+[DebuggerDisplay("{IsError ? \"Error: \" + _errors[0].Code : \"Value: \" + _value}")]
 public readonly partial record struct ErrorOr<TValue> : IErrorOr<TValue>
 {
     private readonly TValue? _value = default;
