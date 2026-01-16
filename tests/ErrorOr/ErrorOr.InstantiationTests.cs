@@ -407,4 +407,64 @@ public class ErrorOrInstantiationTests
         act.Should().ThrowExactly<ArgumentNullException>()
            .And.ParamName.Should().Be("value");
     }
+
+    [Fact]
+    public void IErrorOrValueObject_WhenHasValue_ShouldReturnValue()
+    {
+        // Arrange
+        ErrorOr<Person> errorOrPerson = new Person("Test");
+        IErrorOr errorOr = errorOrPerson;
+
+        // Act
+        var valueObject = errorOr.ValueObject;
+
+        // Assert
+        valueObject.Should().BeOfType<Person>();
+        ((Person)valueObject).Name.Should().Be("Test");
+    }
+
+    [Fact]
+    public void IErrorOrValueObject_WhenIsError_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        ErrorOr<Person> errorOrPerson = Error.NotFound();
+        IErrorOr errorOr = errorOrPerson;
+
+        // Act
+        Func<object> act = () => errorOr.ValueObject;
+
+        // Assert
+        act.Should().ThrowExactly<InvalidOperationException>()
+           .And.Message.Should().Be("The ValueObject property cannot be accessed when errors have been recorded. Check IsError before accessing ValueObject.");
+    }
+
+    [Fact]
+    public void IErrorOrErrors_WhenHasValue_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        ErrorOr<Person> errorOrPerson = new Person("Test");
+        IErrorOr errorOr = errorOrPerson;
+
+        // Act
+        Func<List<Error>?> act = () => errorOr.Errors;
+
+        // Assert
+        errorOr.IsError.Should().BeFalse();
+        act.Should().ThrowExactly<InvalidOperationException>()
+           .And.Message.Should().Be("The Errors property cannot be accessed when no errors have been recorded. Check IsError before accessing Errors.");
+    }
+
+    [Fact]
+    public void IErrorOrErrors_WhenIsError_ShouldReturnErrors()
+    {
+        // Arrange
+        var error = Error.NotFound("Test.NotFound", "Test not found");
+        ErrorOr<Person> errorOrPerson = error;
+        IErrorOr errorOr = errorOrPerson;
+
+        // Act & Assert
+        errorOr.IsError.Should().BeTrue();
+        errorOr.Errors.Should().NotBeNull();
+        errorOr.Errors.Should().ContainSingle().Which.Should().Be(error);
+    }
 }

@@ -57,4 +57,36 @@ public class ToErrorOrTests
         result.IsError.Should().BeTrue();
         result.Errors.Should().Equal(errors);
     }
+
+    [Fact]
+    public async Task ToErrorOrAsync_WhenValueTaskProvided_ShouldReturnErrorOrWithValue()
+    {
+        // Arrange
+        var task = Task.FromResult(42);
+
+        // Act
+        var result = await task.ToErrorOrAsync();
+
+        // Assert
+        result.IsError.Should().BeFalse();
+        result.Value.Should().Be(42);
+    }
+
+    [Fact]
+    public async Task ToErrorOrAsync_WhenAsyncOperation_ShouldAwaitAndReturnValue()
+    {
+        // Arrange
+        static async Task<string> GetValueAsync()
+        {
+            await Task.Delay(1);
+            return "async result";
+        }
+
+        // Act
+        var result = await GetValueAsync().ToErrorOrAsync();
+
+        // Assert
+        result.IsError.Should().BeFalse();
+        result.Value.Should().Be("async result");
+    }
 }

@@ -178,4 +178,32 @@ public sealed class ErrorOrEqualityTests
 
         hashCode1.Should().NotBe(hashCode2);
     }
+
+    [Fact]
+    public void Equals_WhenValueIsComparedToError_ShouldReturnFalse()
+    {
+        // Arrange
+        ErrorOr<Person> errorOrValue = new Person("Test");
+        ErrorOr<Person> errorOrError = Error.NotFound();
+
+        // Act
+        var result = errorOrValue.Equals(errorOrError);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Equals_WhenErrorIsComparedToValue_ShouldReturnFalse()
+    {
+        // Arrange
+        ErrorOr<Person> errorOrError = Error.NotFound();
+        ErrorOr<Person> errorOrValue = new Person("Test");
+
+        // Act
+        var result = errorOrError.Equals(errorOrValue);
+
+        // Assert
+        result.Should().BeFalse();
+    }
 }
