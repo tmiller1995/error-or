@@ -929,7 +929,3 @@ If you have any questions, comments, or suggestions, please open an issue or cre
 This project is licensed under the terms of the [MIT](https://github.com/tmiller1995/error-or/blob/main/LICENSE) license.
 
 ---
-
-## Migration from ErrorOr
-
-If you're migrating from the original `ErrorOr` package, see [MIGRATION.md](MIGRATION.md) for details.
