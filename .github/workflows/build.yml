@@ -34,6 +34,8 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.dotnet-version == '10.0.x'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODE_COV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
