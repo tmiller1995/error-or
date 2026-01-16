@@ -4,7 +4,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/TylerSoftware.ErrorOr.svg)](https://www.nuget.org/packages/TylerSoftware.ErrorOr)
 
-[![Build](https://github.com/tmiller1995/error-or/actions/workflows/build.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/build.yml) [![Publish](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml)
+[![Build](https://github.com/tmiller1995/error-or/actions/workflows/build.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/build.yml) [![Publish](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml/badge.svg)](https://github.com/tmiller1995/error-or/actions/workflows/publish.yml) [![codecov](https://codecov.io/github/tmiller1995/error-or/graph/badge.svg)](https://codecov.io/github/tmiller1995/error-or)
 
 [![GitHub Stars](https://img.shields.io/github/stars/tmiller1995/error-or.svg)](https://github.com/tmiller1995/error-or/stargazers) [![GitHub license](https://img.shields.io/github/license/tmiller1995/error-or)](https://github.com/tmiller1995/error-or/blob/main/LICENSE)
 
